@@ -31,7 +31,7 @@ image_index = 0
 
 # Player object
 player = pygame.image.load('player.png').convert_alpha()
-player_rect = player.get_rect().move(PADDING_SIZE, HEIGHT // 2 - player.get_width() // 2)
+player_rect = player.get_rect().move(0, HEIGHT // 2 - player.get_width() // 2)
 player_move_down = [0, 4]
 player_move_right = [4, 0]
 player_move_left = [-4, 0]
@@ -39,10 +39,16 @@ player_move_up = [0, -4]
 
 # Enemies
 def create_enemy():
-    enemy_size = (200, 100)
     # Define object
-    enemy = pygame.transform.scale(pygame.image.load('enemy.png').convert_alpha(), enemy_size)
-    enemy_rect = enemy.get_rect().move(WIDTH, random.randint(PADDING_SIZE, HEIGHT - PADDING_SIZE))
+    enemy = pygame.image.load('enemy.png').convert_alpha()
+    enemy_rect = pygame.Rect(
+        WIDTH,
+        random.randint(
+            PADDING_SIZE,
+            HEIGHT - enemy.get_height()
+        ),
+        *enemy.get_size()
+    )
     enemy_move = [random.randint(-8, -4), 0] # Define speed
     return [enemy, enemy_rect, enemy_move]
 
@@ -56,10 +62,17 @@ score = 0
 
 # Bonuses
 def create_bonus():
-    bonus_size = (150, 250)
     # Define object
-    bonus = pygame.transform.scale(pygame.image.load('bonus.png').convert_alpha(), bonus_size)
-    bonus_rect = bonus.get_rect().move(random.randint(PADDING_SIZE, WIDTH - PADDING_SIZE), -bonus.get_height())
+    bonus = pygame.image.load('bonus.png').convert_alpha()
+    bonus_width = bonus.get_width()
+    bonus_rect = pygame.Rect(
+        random.randint(
+            bonus_width,
+            WIDTH - bonus_width
+        ),
+        -bonus.get_height(),
+        *bonus.get_size()
+    )
     bonus_move = [0, random.randint(4, 8)] # Define speed
     return [bonus, bonus_rect, bonus_move]
 
@@ -140,10 +153,6 @@ while playing:
         if player_rect.colliderect(enemy[1]):
             playing = False # If player has touched this object, game is over
 
-    for enemy in enemies:
-        if enemy[1].right < 0:
-            enemies.pop(enemies.index(enemy)) # If enemy is no longer on the screen, delete it
-
     # Bonuses activity
     for bonus in bonuses:
         bonus[1] = bonus[1].move(bonus[2]) # Move every bonus based on randomly generated speed
@@ -154,9 +163,14 @@ while playing:
             bonuses.pop(bonuses.index(bonus)) # Consume bonus
             score += 1 # Increment score
 
+    pygame.display.flip() # Reload main screen
+
+    # delete elements that are no longer on the screen
+    for enemy in enemies:
+        if enemy[1].right < 0:
+            enemies.pop(enemies.index(enemy)) # If enemy is no longer on the screen, delete it
+
     for bonus in bonuses:
         if bonus[1].top > HEIGHT:
             # If bonus is no longer on the screen, delete it
             bonuses.pop(bonuses.index(bonus))
-
-    pygame.display.flip() # Reload main screen
